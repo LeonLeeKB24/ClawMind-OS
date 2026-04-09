@@ -1,0 +1,9 @@
+[build]
+command = "npm install"
+startCommand = "npm start"
+
+[env]
+NODE_ENV = "production"
+PORT = "3000"
+DATABASE_URL = "postgresql://postgres:xiaoqceo0227@db.eyfimwxykwgovidvhxgo.supabase.co:5432/postgres"
+CORS_ORIGIN = "*"
