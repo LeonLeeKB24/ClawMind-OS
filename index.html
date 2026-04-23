@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClawMindOS — Persistent Memory OS for AI Agents</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #050a0e; --surface: #0c1419; --border: rgba(0,210,140,0.15);
+    --teal: #00d28c; --teal-dim: rgba(0,210,140,0.08);
+    --text: #e8f0ec; --muted: #6b8a78;
+    --mono: 'Space Mono', monospace; --sans: 'Syne', sans-serif;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(0,210,140,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,210,140,0.03) 1px, transparent 1px);
+    background-size: 60px 60px; pointer-events: none; z-index: 0;
+  }
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 4rem;
+    background: rgba(5,10,14,0.85); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { font-family: var(--mono); font-size: 1rem; color: var(--teal); text-decoration: none; }
+  .logo span { color: var(--muted); }
+  .nav-back { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); text-decoration: none; letter-spacing: 0.08em; }
+  .nav-back:hover { color: var(--teal); }
+  section { position: relative; z-index: 1; }
+  .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 8rem 4rem 4rem; max-width: 1100px; margin: 0 auto; }
+  .hero-tag { font-family: var(--mono); font-size: 0.75rem; color: var(--teal); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem; }
+  .hero-tag::before { content: ''; display: inline-block; width: 24px; height: 1px; background: var(--teal); }
+  h1 { font-family: var(--sans); font-size: clamp(3rem, 7vw, 5.5rem); font-weight: 800; line-height: 1.0; letter-spacing: -0.02em; margin-bottom: 1.5rem; }
+  h1 em { font-style: normal; color: var(--teal); }
+  .hero-sub { font-size: 1.15rem; color: var(--muted); max-width: 540px; margin-bottom: 3rem; line-height: 1.8; }
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn-primary { background: var(--teal); color: #050a0e; padding: 0.85rem 2rem; font-family: var(--mono); font-size: 0.85rem; font-weight: 700; letter-spacing: 0.05em; text-decoration: none; border-radius: 3px; transition: opacity 0.2s; display: inline-block; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-outline { border: 1px solid var(--border); color: var(--muted); padding: 0.85rem 2rem; font-family: var(--mono); font-size: 0.85rem; letter-spacing: 0.05em; text-decoration: none; border-radius: 3px; transition: border-color 0.2s, color 0.2s; display: inline-block; }
+  .btn-outline:hover { border-color: var(--teal); color: var(--teal); }
+  .features { padding: 6rem 4rem; max-width: 1100px; margin: 0 auto; }
+  .section-label { font-family: var(--mono); font-size: 0.7rem; color: var(--teal); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1rem; }
+  .section-title { font-size: clamp(1.8rem, 3vw, 2.8rem); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 3rem; }
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
+  .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 2rem; }
+  .feature-icon { font-family: var(--mono); font-size: 1.5rem; color: var(--teal); margin-bottom: 1rem; }
+  .feature-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .feature-card p { font-size: 0.875rem; color: var(--muted); line-height: 1.7; }
+  .memory-viz { padding: 6rem 4rem; background: var(--teal-dim); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .memory-inner { max-width: 800px; margin: 0 auto; }
+  .memory-tiers { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 3rem; }
+  .tier { display: flex; align-items: center; gap: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1.25rem 1.5rem; }
+  .tier-label { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; padding: 0.3rem 0.75rem; border-radius: 2px; min-width: 60px; text-align: center; }
+  .tier-hot .tier-label { background: rgba(210,80,0,0.15); color: #ff8a50; border: 1px solid rgba(210,80,0,0.3); }
+  .tier-warm .tier-label { background: rgba(210,180,0,0.1); color: #ffd050; border: 1px solid rgba(210,180,0,0.2); }
+  .tier-cold .tier-label { background: rgba(0,120,210,0.1); color: #60b0ff; border: 1px solid rgba(0,120,210,0.2); }
+  .tier-info h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.25rem; }
+  .tier-info p { font-size: 0.8rem; color: var(--muted); }
+  .pricing { padding: 6rem 4rem; max-width: 900px; margin: 0 auto; }
+  .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
+  .price-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 2rem; }
+  .price-card.featured { border-color: var(--teal); }
+  .price-name { font-family: var(--mono); font-size: 0.7rem; color: var(--teal); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 1rem; }
+  .price-amount { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.25rem; }
+  .price-period { font-size: 0.8rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .price-features { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+  .price-features li { font-size: 0.85rem; color: var(--muted); display: flex; gap: 0.5rem; }
+  .price-features li::before { content: '—'; color: var(--teal); flex-shrink: 0; }
+  .api-section { padding: 6rem 4rem; max-width: 1100px; margin: 0 auto; }
+  .code-block { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 2rem; font-family: var(--mono); font-size: 0.8rem; line-height: 1.8; color: var(--muted); margin-top: 2rem; overflow-x: auto; }
+  .code-block .key { color: #60b0ff; }
+  .code-block .val { color: var(--teal); }
+  .code-block .str { color: #ffd050; }
+  footer { border-top: 1px solid var(--border); padding: 2.5rem 4rem; display: flex; align-items: center; justify-content: space-between; }
+  footer p { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+  .footer-links { display: flex; gap: 2rem; }
+  .footer-links a { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); text-decoration: none; }
+  .footer-links a:hover { color: var(--teal); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .hero > * { animation: fadeUp 0.7s ease both; }
+  .hero > *:nth-child(1) { animation-delay: 0.1s; }
+  .hero > *:nth-child(2) { animation-delay: 0.2s; }
+  .hero > *:nth-child(3) { animation-delay: 0.3s; }
+  .hero > *:nth-child(4) { animation-delay: 0.4s; }
+  @media (max-width: 768px) {
+    nav, .hero, .features, .memory-viz, .pricing, .api-section { padding-left: 1.5rem; padding-right: 1.5rem; }
+    footer { flex-direction: column; gap: 1rem; padding: 2rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <a href="https://clawstack-ai.xyz" class="logo">Claw<span>MindOS</span></a>
+  <a href="https://clawstack-ai.xyz" class="nav-back">← ClawStack</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag">03 — ClawStack Ecosystem</div>
+  <h1>AI agents that<br><em>remember everything</em></h1>
+  <p class="hero-sub">ClawMindOS is a persistent memory operating system for AI agents. HOT/WARM/COLD memory tiers, task state machines, and multi-agent communication — built for autonomous AI.</p>
+  <div class="hero-actions">
+    <a href="https://clawmindos-ai.xyz/health" class="btn-primary">View API Status</a>
+    <a href="https://github.com/LeonLeeKB24/ClawMind-OS" class="btn-outline">GitHub →</a>
+  </div>
+</section>
+
+<section class="features">
+  <div class="section-label">// core modules</div>
+  <h2 class="section-title">The agent brain stack</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <h3>Persistent Memory</h3>
+      <p>Three-tier memory architecture (HOT/WARM/COLD) with on-demand injection. Agents carry context across sessions — no more starting from zero.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚙️</div>
+      <h3>Task State Machine</h3>
+      <p>Agents track task progress across interruptions. Resume from any checkpoint without replaying the entire context window.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Self-Evaluation</h3>
+      <p>After each task, agents score their own performance, identify failure patterns, and update their strategy — autonomous improvement.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔗</div>
+      <h3>Multi-Agent Comms</h3>
+      <p>Standardized interfaces for agent-to-agent message passing. Orchestrators, workers, and specialists can coordinate reliably.</p>
+    </div>
+  </div>
+</section>
+
+<section class="memory-viz">
+  <div class="memory-inner">
+    <div class="section-label">// memory architecture</div>
+    <h2 class="section-title">Token-efficient by design</h2>
+    <div class="memory-tiers">
+      <div class="tier tier-hot">
+        <span class="tier-label">HOT</span>
+        <div class="tier-info">
+          <h4>Active Context</h4>
+          <p>Always injected. Current task, recent decisions, active agent state. &lt;500 tokens.</p>
+        </div>
+      </div>
+      <div class="tier tier-warm">
+        <span class="tier-label">WARM</span>
+        <div class="tier-info">
+          <h4>Recent Memory</h4>
+          <p>Injected on relevance match. Last 7 days of episodic memory, learned preferences.</p>
+        </div>
+      </div>
+      <div class="tier tier-cold">
+        <span class="tier-label">COLD</span>
+        <div class="tier-info">
+          <h4>Long-term Archive</h4>
+          <p>Retrieved by semantic search only. Unlimited storage, minimal token cost.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="api-section">
+  <div class="section-label">// api example</div>
+  <h2 class="section-title">Simple to integrate</h2>
+  <div class="code-block">
+    <span class="key">GET</span> /agents/<span class="val">agent-001</span>/memories?type=semantic&limit=5<br><br>
+    {<br>
+    &nbsp;&nbsp;<span class="key">"success"</span>: <span class="val">true</span>,<br>
+    &nbsp;&nbsp;<span class="key">"data"</span>: [{<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"content"</span>: <span class="str">"User prefers concise responses"</span>,<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"type"</span>: <span class="str">"semantic"</span>,<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"importance"</span>: <span class="val">9</span>,<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"tier"</span>: <span class="str">"HOT"</span><br>
+    &nbsp;&nbsp;}]<br>
+    }
+  </div>
+</section>
+
+<section class="pricing">
+  <div class="section-label">// pricing</div>
+  <h2 class="section-title">Start free, scale as you grow</h2>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-name">Starter</div>
+      <div class="price-amount">$0</div>
+      <div class="price-period">forever</div>
+      <ul class="price-features">
+        <li>1 Agent</li>
+        <li>100MB COLD storage</li>
+        <li>1,000 API calls/day</li>
+        <li>Community support</li>
+      </ul>
+    </div>
+    <div class="price-card featured">
+      <div class="price-name">Pro</div>
+      <div class="price-amount">$19</div>
+      <div class="price-period">per month</div>
+      <ul class="price-features">
+        <li>5 Agents</li>
+        <li>Unlimited COLD storage</li>
+        <li>50,000 API calls/day</li>
+        <li>Priority support</li>
+      </ul>
+    </div>
+    <div class="price-card">
+      <div class="price-name">Enterprise</div>
+      <div class="price-amount">$199</div>
+      <div class="price-period">per month</div>
+      <ul class="price-features">
+        <li>Unlimited Agents</li>
+        <li>Custom storage</li>
+        <li>Unlimited API calls</li>
+        <li>Dedicated support</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 ClawMindOS · Part of ClawStack</p>
+  <div class="footer-links">
+    <a href="https://clawstack-ai.xyz">ClawStack</a>
+    <a href="https://clawskill-ai.xyz">ClawSkill</a>
+    <a href="https://clawflow-ai.xyz">ClawFlow</a>
+    <a href="https://github.com/LeonLeeKB24/ClawMind-OS">GitHub</a>
+  </div>
+</footer>
+</body>
+</html>
